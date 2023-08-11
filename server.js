@@ -1,6 +1,6 @@
 const mongoose = require("mongoose"); // імпортуємо mongoose
 const app = require("./app");
-const { DB_HOST } = require("./config");
+// const { DB_HOST } = require("./config");
 
 mongoose.set("strictQuery", true);
 
