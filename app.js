@@ -1,8 +1,12 @@
 const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
+const dotenv = require("dotenv"); // імпортуємо пакет doterv який завантажує змінні середовища з .env
+
+dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
 
 const contactsRouter = require("./routes/api/contacts"); // імпортуємо "сторінку записної книжки"
+
 const app = express(); // створюємо веб-сервер
 
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
