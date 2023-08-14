@@ -3,6 +3,7 @@ const app = require("./app");
 // const DB_HOST = require("./config");
 
 mongoose.set("strictQuery", true);
+
 const { DB_HOST, PORT = 3000 } = process.env;
 
 // console.log(process.env);

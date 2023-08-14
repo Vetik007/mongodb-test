@@ -5,6 +5,8 @@ const dotenv = require("dotenv"); // імпортуємо пакет doterv як
 
 dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
 
+// require("dotenv").config();// скорочений запис імпорту пакету doterv та виклику методу config
+
 const contactsRouter = require("./routes/api/contacts"); // імпортуємо "сторінку записної книжки"
 
 const app = express(); // створюємо веб-сервер

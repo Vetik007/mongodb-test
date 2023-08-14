@@ -6,6 +6,7 @@ const validateBody = (schema, operation) => {
   const func = (req, res, next) => {
     const { error } = schema.validate(req.body);
     // console.log(req.body);
+
     if (error) {
       const fieldName = error.details[0].context.key;
       let errorMessage = "";

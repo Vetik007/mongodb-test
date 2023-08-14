@@ -1,14 +1,17 @@
 // в цей файл винесені всі маршрути які стосуюсться контактів
 
 const express = require("express");
+// const Joi = require("joi");
 
 const router = express.Router(); // створюємо "сторінку записної книжки"
 
 const ctrl = require("../../controllers/contacts");
 
-const validateBody = require("../../middlewares");
+const { validateBody, isValidId } = require("../../middlewares");
 
 const schemas = require("../../shemas/contacts");
+
+// const schemas = require("../../models/contact");
 
 // створюємо мартшрути
 // для уникнення повторення коду, третім аргументом вказуємо next який передаємо в catch та який приймає error, тобто next буде шукати обробник помилок. Обробник помилок це функція яка приймає 4 параметри. В нашому випадку така функція знаходиться в app.js
@@ -17,19 +20,30 @@ const schemas = require("../../shemas/contacts");
 router.get("/", ctrl.getListContacts);
 
 // отримання контакту по id
-router.get("/:contactId", ctrl.getContactById);
+router.get("/:contactId", isValidId, ctrl.getContactById);
 
 // додавання контакту
 router.post("/", validateBody(schemas.addSchema, "add"), ctrl.addContacts);
+
+// // додавання контакту
+// router.post("/", ctrl.addContacts);
 
 // видалення контакту
 router.delete("/:contactId", ctrl.removeContacts);
 
 // внесення змін до контакту
-router.put(
-  "/:contactId",
+router.put("/:contactId", [
+  isValidId,
   validateBody(schemas.addSchema, "update"),
-  ctrl.updateContact
+  ctrl.updateContact,
+]);
+
+// оновлення поля favorite
+router.patch(
+  "/:id/favorite",
+  isValidId,
+  // validateBody(schemas.updateFavoriteSchema),
+  ctrl.updateStatusContact
 );
 
 module.exports = router;
