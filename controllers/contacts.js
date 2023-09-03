@@ -1,22 +1,39 @@
-// const contacts = require("../models/contacts"); // імпорт функції для роботи з contacts.json
 const Contact = require("../models/contact"); // імпорт функції для роботи з бекендом
 
 const { HttpError, ctrlWrapper } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
 // отритмання всіх контактів
-// метод find знаходить і повертає всі елементи колекціі
+
+// у req.query зберігаються всі параметри пошуку
 const getListContacts = async (req, res) => {
-  const result = await Contact.find();
-  res.json(result);
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, favorite } = req.query; // (для пагинації)отримуємо значення параметрів page та limit
+  const skip = (page - 1) * limit; // Обчислення значення пропуску для операції пошуку
+  const result = await Contact.find({ owner }, "", { skip, limit }).populate(
+    "owner",
+    "email"
+  );
+  // додаємо фільтрацію контактів по значенню поля favorite(true або false)
+  if (favorite === "true") {
+    const favoriteContacts = result.filter(
+      (contact) => contact.favorite === true
+    );
+    res.status(200).json({ favoriteContacts });
+  } else if (favorite === "false") {
+    const nonFavoriteContacts = result.filter(
+      (contact) => contact.favorite !== true
+    );
+    res.status(200).json({ nonFavoriteContacts });
+  } else {
+    res.status(200).json({ result });
+  }
 };
 
 // отримання контакту по id
-// метод findOne - знаходить перше співпадіння і повертає об'єкт, інакше - null
 const getContactById = async (req, res) => {
   const { contactId } = req.params;
 
-  // const result = await Contact.findOne({ _id: contactId }); // використовують для пошуку всього іншого
-  const result = await Contact.findById(contactId); // використовують для пошуку по id
+  const result = await Contact.findById(contactId); // використовуємо для пошуку по id
 
   // обробляємо помилку якщо контакт не існує
   if (!result) {
@@ -26,10 +43,9 @@ const getContactById = async (req, res) => {
 };
 
 // додавання контакту
-// для додавання необхідно прочитати тіло запиту, яке зберігається у req.body
-// робимо валідацію за домогою бібліотеки joi. У addSchema викликаємо метод validate та передаємо об'єкт який необхідно перевірити, тобто перевіряємо тіло body(об'єкт post-запиту на додавання контакту) на наявність всіх полів та їх відповідність вимогам у addSchema
 const addContacts = async (req, res, next) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
 
   res.status(201).json(result);
 };
@@ -47,39 +63,42 @@ const removeContacts = async (req, res) => {
 
 // внесення змін до контакту
 const updateContact = async (req, res) => {
+  // console.log("updateContact-terminal");
   const { contactId } = req.params;
-  console.log("contactIdUpdate", contactId);
+  // console.log("contactIdUpdate - ", contactId);
   const result = await Contact.findByIdAndUpdate(contactId, req.body, {
     new: true,
   });
 
-  console.log(result);
+  // console.log("result-updateContact - ", result);
   if (!result) {
     throw HttpError(404, "Not found");
   }
   res.json(result);
 };
 
+// оновлення поля favorite
 const updateStatusContact = async (req, res) => {
-  const { id } = req.params;
-  // console.log("contactIdFavorite", contactId);
+  // console.log("updateStatusContact-terminal");
+  const { contactId } = req.params;
+  // console.log("contactIdFavorite - ", contactId);
 
   const { favorite } = req.body;
-  // console.log(favorite);
+  // console.log("favorite - ", favorite);
 
   if (favorite === undefined) {
     throw HttpError(400, "missing field favorite");
   }
 
   const result = await Contact.findByIdAndUpdate(
-    id,
+    contactId,
     { favorite },
     { new: true }
   );
-  
-  // console.log(result);
+
+  // console.log("result-updateStatusContact - ", result);
   if (!result) {
-    throw HttpError(404, `Contact with id= ${id} not found`);
+    throw HttpError(404, `Contact with id= ${contactId} not found`);
   }
   res.json(result);
 };
@@ -92,57 +111,3 @@ module.exports = {
   updateContact: ctrlWrapper(updateContact),
   updateStatusContact: ctrlWrapper(updateStatusContact),
 };
-
-//* ================== код для роботи з локальним json-файлом =========================
-// // отритмання всіх контактів
-// const getListContacts = async (req, res) => {
-//   const result = await contacts.listContacts();
-//   res.json(result);
-// };
-
-// // отримання контакту по id
-// const getContactById = async (req, res) => {
-//   const { contactId } = req.params;
-//   const result = await contacts.getContactById(contactId);
-//   // обробляємо помилку якщо контакт не існує
-//   if (!result) {
-//     throw HttpError(404, "Contact not found");
-//   }
-//   res.json(result);
-// };
-
-// // додавання контакту
-// // для додавання необхідно прочитати тіло запиту, яке зберігається у req.body
-// // робимо валідацію за домогою бібліотеки joi. У addSchema викликаємо метод validate та передаємо об'єкт який необхідно перевірити, тобто перевіряємо тіло body(об'єкт post-запиту на додавання контакту) на наявність всіх полів та їх відповідність вимогам у addSchema
-// const addContacts = async (req, res, next) => {
-//   const result = await contacts.addContact(req.body);
-//   res.status(201).json(result);
-// };
-
-// // видалення контакту
-// const removeContacts = async (req, res) => {
-//   const { contactId } = req.params;
-//   const result = await contacts.removeContact(contactId);
-//   if (!result) {
-//     throw HttpError(404, "Not found");
-//   }
-//   res.json({ message: "Сontact deleted" });
-// };
-
-// // внесення змін до контакту
-// const updateContact = async (req, res) => {
-//   const { contactId } = req.params;
-//   const result = await contacts.updateContact(contactId, req.body);
-//   if (!result) {
-//     throw HttpError(404, "Not found");
-//   }
-//   res.json(result);
-// };
-
-// module.exports = {
-// getListContacts: ctrlWrapper(getListContacts),
-// getContactById: ctrlWrapper(getContactById),
-// addContacts: ctrlWrapper(addContacts),
-// removeContacts: ctrlWrapper(removeContacts),
-// updateContact: ctrlWrapper(updateContact),
-// };

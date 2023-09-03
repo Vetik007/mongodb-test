@@ -2,8 +2,6 @@ const { Schema, model } = require("mongoose"); // імпортуємо з mongoo
 const { handleMongooseError } = require("../helpers");
 
 // створюємо схему mongoose
-// Якщо до поля більше однієї вимоги створюємо об'єкт в якому перераховуємо всі вимоги до поля.
-// другим елементом у схемі передаємо об'єкт налаштування (параметр versionKey - виводить версію документа, параметр timestamps - виводить дату створення та дату оновлення запису.)
 const contactSchema = new Schema(
   {
     name: {
@@ -20,13 +18,18 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false, // значення за замовчуванням
     },
+
+    owner: {
+      type: Schema.Types.ObjectId, // зберігається id яке генерує mongoDb
+      ref: "user", // назва колекції з якої це id
+    },
+
   },
   { versionKey: false, timestamps: true }
 );
 
-// додаємо до схеми міделвару обробки невірного статутсу помилок
+// додаємо до схеми міделвару обробку невірного статутсу помилок
 contactSchema.post("save", handleMongooseError);
-// contactSchema.put("save", handleMongooseError);
 
 // створюємо модель. В аргументах назву колекціїї передаємо в однині
 const Contact = model("contact", contactSchema);
